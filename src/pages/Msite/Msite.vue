@@ -1,6 +1,6 @@
 <template>
   <div class="msite">
-    <HeaderTop title="地址">
+    <HeaderTop :title="address.name">
       <span slot="left">
         <i class="iconfont icon-sousuo"></i>
       </span>
@@ -9,11 +9,16 @@
     <nav class="msite_nav">
       <div class="swiper-container">
         <div class="swiper-wrapper">
-          <div class="swiper-slide">Slide 1</div>
-          <div class="swiper-slide">Slide 2</div>
-          <div class="swiper-slide">Slide 3</div>
+          <div class="swiper-slide swiper-slide-active"  v-for="(categorys, index) in categorysArr" :key="index">
+            <router-link to="/" class="link_to_food"  v-for="(category,index) in categorys" :key="index">
+              <div class="food_container">
+                <img :src="baseImageUrl + category.image_url" alt="">
+              </div>
+              <span>{{category.title}}</span>
+            </router-link>
+          </div>
         </div>
-        <!-- 如果需要分页器 -->
+         <!-- swiper轮播图圆点 -->
         <div class="swiper-pagination"></div>
       </div>
     </nav>
@@ -38,21 +43,44 @@ export default {
  
   created() {
     this.$store.dispatch('getCategorys')
-    this.$store.dispatch('getShops')
-  
-  },
-  mounted() {
-    new Swiper('.swiper-container', {
-      loop:true,
-      autoplay: true,//可选选项，自动滑动
-      // 如果需要分页器
-      pagination: {
-        el: '.swiper-pagination',
-      }
-    })
+    this.$store.dispatch('getAddress')
   },
   computed: {
-    ...mapState(['searchShops','userInfo'])
+    ...mapState(['userInfo','categorys','address']),
+
+    categorysArr() {
+      const {categorys} = this
+        // 准备空的二维数组
+        const arr = []
+        let minArr = []
+        // 遍历categorys
+        categorys.forEach(c => {
+          if (minArr.length===8) {
+            arr.push(minArr)
+            minArr = []
+          }
+          minArr.push(c)
+        })
+        if (minArr) {
+          arr.push(minArr)
+        }
+        return arr
+      }
+  },
+  watch: {
+    categorys (value) { // categorys数组中有数据了，在异步更新界面之前执行
+        // 希望界面更新就立即创建swiper对象
+        this.$nextTick(() => { // 一旦界面更新立即调用(要写在数据更新之后)
+          // 创建一个swiper实例对象实现轮播
+          new Swiper('.swiper-container',{
+            loop: true, // 循环轮播
+            // 如果需要分页器
+            pagination: {
+              el: '.swiper-pagination'
+            }
+          })
+        })
+      }
   },
   components: {
     HeaderTop,
